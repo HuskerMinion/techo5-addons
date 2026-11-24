@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "serial": 1,
+  "serial": 2,
   "addons": [
     {
       "id": "techo5-plex",
@@ -12,7 +12,9 @@
       "versions": [
         {
           "version": "0.1.0",
-          "min_techo5": {"show": "v1.6.52"},
+          "min_techo5": {
+            "show": "v1.6.52"
+          },
           "binaries": {
             "arm": {
               "url": "https://github.com/HuskerMinion/techo5-plex/releases/download/v0.1.0/techo5-plex-arm",
@@ -26,14 +28,71 @@
             }
           },
           "ports": [
-            {"proto": "tcp", "port": 32500, "why": "Plex apps control the player"},
-            {"proto": "tcp", "port": 32501, "why": "its link page"},
-            {"proto": "udp", "from": 32410, "to": 32414, "why": "Plex finds players"}
+            {
+              "proto": "tcp",
+              "port": 32500,
+              "why": "Plex apps control the player"
+            },
+            {
+              "proto": "tcp",
+              "port": 32501,
+              "why": "its link page"
+            },
+            {
+              "proto": "udp",
+              "from": 32410,
+              "to": 32414,
+              "why": "Plex finds players"
+            }
           ],
           "root": false,
           "memory_mb": 40,
           "disk_mb": 12,
           "todo": "TODO: v0.1.0's release carries no addon.json, so no manifest is pinned here and devices list this version without offering to install it. The addon.json on techo5-plex's addon-manifest branch (version 0.2.0) ships with its next release: add that release as a new version entry, pinning its binaries and its addon.json asset with mkcatalog -pin URL=FILE and checking the manifest with mkcatalog -manifest FILE, raise the serial, and sign (tools/sign-catalog.ps1)."
+        },
+        {
+          "version": "0.2.0",
+          "min_techo5": {
+            "show": "v1.6.53"
+          },
+          "binaries": {
+            "arm": {
+              "url": "https://github.com/HuskerMinion/techo5-plex/releases/download/v0.2.0/techo5-plex-arm",
+              "sha256": "409dadb3cde2299ddc5f72448149dd553e0a4109971435e626a612cc7bd256ad",
+              "size": 10223776
+            },
+            "arm64": {
+              "url": "https://github.com/HuskerMinion/techo5-plex/releases/download/v0.2.0/techo5-plex-arm64",
+              "sha256": "e6e2399df4a3b3b60103f6b87564cfa1842fa29637eb91c96214d5838fdf9fec",
+              "size": 9765024
+            }
+          },
+          "ports": [
+            {
+              "proto": "tcp",
+              "port": 32500,
+              "why": "Plex apps control the player"
+            },
+            {
+              "proto": "tcp",
+              "port": 32501,
+              "why": "its link page"
+            },
+            {
+              "proto": "udp",
+              "from": 32410,
+              "to": 32414,
+              "why": "Plex finds players"
+            }
+          ],
+          "root": false,
+          "memory_mb": 40,
+          "disk_mb": 12,
+          "manifest": {
+            "url": "https://github.com/HuskerMinion/techo5-plex/releases/download/v0.2.0/addon.json",
+            "sha256": "4123dcf33c9da95bd2071e173839f1aed4115396632fc7dc922e522c4addb6cf",
+            "size": 415
+          }
         }
       ]
     }
