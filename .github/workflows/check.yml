@@ -1,0 +1,41 @@
+# Every push and pull request: the catalog is one a device would take, every file it pins is still
+# what it pins, and every pinned addon.json matches its entry. mkcatalog is built from TECHO5's main,
+# so the catalog is read here with the same definition a device and the signing tool read it with.
+name: check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: HuskerMinion/techo5
+          ref: main
+          path: techo5
+          persist-credentials: false
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: techo5/echod/go.mod
+          cache-dependency-path: techo5/echod/go.sum
+
+      - name: Build mkcatalog
+        working-directory: techo5/echod
+        run: go build -o "$RUNNER_TEMP/mkcatalog" ./cmd/mkcatalog
+
+      - name: Check the catalog
+        run: '"$RUNNER_TEMP/mkcatalog" -in catalog.json'
+
+      - name: Check every pinned file and manifest
+        run: python3 tools/check-pins.py catalog.json "$RUNNER_TEMP/mkcatalog" "$RUNNER_TEMP/pins"

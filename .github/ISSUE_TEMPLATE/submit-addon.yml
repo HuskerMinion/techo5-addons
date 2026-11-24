@@ -1,0 +1,135 @@
+name: Submit an add-on
+description: Ask for an add-on to be listed in TECHO5's add-on catalog.
+title: "Submit: <add-on name>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for making something for TECHO5. Before you send this, read [Getting an add-on listed](https://github.com/HuskerMinion/techo5-addons#for-authors-getting-an-add-on-listed): what an add-on needs, the `addon.json` format, and how a submission is reviewed.
+
+        Check your `addon.json` the way a device does, from a TECHO5 checkout's `echod` folder: `go run ./cmd/mkcatalog -manifest addon.json`.
+  - type: input
+    id: name
+    attributes:
+      label: Add-on name
+      placeholder: Plex player
+    validations:
+      required: true
+  - type: input
+    id: id
+    attributes:
+      label: Add-on id
+      description: Lowercase letters, digits and dashes, starting with a letter, as in your addon.json.
+      placeholder: techo5-plex
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Repository URL
+      description: A public repository with a license.
+      placeholder: https://github.com/example/techo5-example
+    validations:
+      required: true
+  - type: input
+    id: authors
+    attributes:
+      label: Author(s)
+      description: As the card should show them (GitHub names are fine).
+    validations:
+      required: true
+  - type: input
+    id: summary
+    attributes:
+      label: One-line summary
+      description: What it does, in one line, for the Add-ons card.
+    validations:
+      required: true
+  - type: textarea
+    id: does
+    attributes:
+      label: What it does on the device
+      description: What it runs, what it reads (microphones, speaker, files, Home Assistant), and what it changes.
+    validations:
+      required: true
+  - type: checkboxes
+    id: families
+    attributes:
+      label: Devices it runs on
+      description: Tick each family it was built and tested for.
+      options:
+        - label: Echo Show family (Show 5, Show 8, Show 8 2nd gen, Skylight)
+        - label: Echo Spot
+        - label: Echo Dot builds (Dot 2, Echo 2, Dot 3, Echo Input)
+  - type: textarea
+    id: ports
+    attributes:
+      label: Ports it listens on, and why
+      description: Each port or range with tcp or udp and the reason, as in addon.json. Write "none" if it listens on nothing.
+      placeholder: |
+        32500/tcp: Plex apps control the player
+        32410-32414/udp: Plex finds players
+    validations:
+      required: true
+  - type: dropdown
+    id: root
+    attributes:
+      label: Does it need root?
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: textarea
+    id: root-why
+    attributes:
+      label: Why it needs root
+      description: Only if it does. What it does that a program running as its own user can't.
+  - type: textarea
+    id: network
+    attributes:
+      label: What it downloads or sends over the network
+      description: Every place it connects to, what it sends there, and whether the owner sets that up. Say if it downloads anything at run time.
+    validations:
+      required: true
+  - type: textarea
+    id: stores
+    attributes:
+      label: What it stores
+      description: What it keeps in its state folder (settings, accounts, caches), and roughly how much.
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: License
+      placeholder: MIT
+    validations:
+      required: true
+  - type: input
+    id: release
+    attributes:
+      label: Release URL
+      description: The release to list, built and published by CI, with the arm and/or arm64 binaries, SHA256SUMS and addon.json as assets.
+      placeholder: https://github.com/example/techo5-example/releases/tag/v0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: tested
+    attributes:
+      label: How it was tested
+      description: The device (model) and TECHO5 version it was tried on, and what you checked.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: For example, if it needs more files than its binary, or another role than a program that runs on the device.
+  - type: checkboxes
+    id: understand
+    attributes:
+      label: Listing
+      options:
+        - label: I understand listing is reviewed and may be declined, and that a listed version can't be changed.
+          required: true

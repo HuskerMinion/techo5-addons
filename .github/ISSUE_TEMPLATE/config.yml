@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: TECHO5 firmware bugs and questions
+    url: https://github.com/HuskerMinion/techo5/issues
+    about: Problems with TECHO5 itself, including the Add-ons card, go to TECHO5's issues. Problems with an add-on go to its own repository.
