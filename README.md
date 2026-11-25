@@ -77,7 +77,7 @@ Checked by `mkcatalog` and by every device (the definitions are in TECHO5's
 - Every download (each binary, each extra file, and `addon.json`) is an https link pinned by its
   SHA-256 and size; a download that doesn't match is refused.
 - Each port is `tcp` or `udp`, a single `port` or a `from`/`to` range (not both), with a `why`. None
-  may be one of TECHO5's own (tcp 22, 4070, 5000, 6053, 7000, 8181, 8554, 8928; udp 68, 319-320, 546,
+  may be one of TECHO5's own (tcp 22, 4070, 5000, 6053, 7000, 8181, 8554, 8928, 8940; udp 68, 319-320, 546,
   1900, 3702, 5353, 6001-6010), none may be given twice, and none may be below 1024 unless it runs as
   root.
 - `addon.json` asks for exactly the ports and root its catalog entry lists, and names exactly the extra
