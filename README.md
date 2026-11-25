@@ -84,8 +84,9 @@ Checked by `mkcatalog` and by every device (the definitions are in TECHO5's
   files the entry pins for the device's build: a device refuses one that differs, even when its hash
   matches.
 - Extra files have plain names (letters, digits, `.`, `-`, `_` and `+`, at most 64, not starting with a
-  dot, not the program's name), each given once, at most 8 for a build and 128 MB together, and every
-  build lists the same names.
+  dot, not ending in `.part`, not the program's name, and neither another's name nor the program's
+  followed by a dot, as `x` and `x.gz`), each given once, at most 8 for a build and 128 MB together,
+  and every build lists the same names.
 - `memory_mb` is more than zero. A device doesn't install or start an add-on that would leave less than
   100 MB of memory for TECHO5.
 - JSON is read strictly: keys are lowercase, each key appears once, and a key the format doesn't know
@@ -260,4 +261,6 @@ To publish, run TECHO5's `tools/sign-catalog.ps1`, which publishes all four file
 `catalog.json` and their `.sig` files), on the computer that holds the release key, with this
 repository checked out beside TECHO5's (or named by `-Catalog` or `$env:TECHO5_ADDONS`). It signs only
 a catalog that is committed and at `origin/main` here, with `mkcatalog` built from a clean TECHO5 at
-its `origin/main`; raise `serial` with every change. `tools/release.ps1` runs it with every release.
+its `origin/main`; raise `serial` with every change. `tools/release.ps1` runs it with every release. The
+first signing that publishes `catalog-v2.json` passes `-FirstFormat2`; every one after it is checked
+against the published `catalog-v2.json` as well as `catalog.json`, and refused without it.
