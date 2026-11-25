@@ -17,8 +17,8 @@ files here; each add-on has its own license, in its own repository.
 
 Add-ons are installed, updated and removed on the device's setup page, on the **Add-ons** card
 (**System** tab). The card lists what the catalog offers for your device, with each add-on's author,
-what it does, the ports it needs opened, whether it runs as root, and roughly how much memory and
-storage it uses. Every install shows this warning first, and you have to tick the box under it to go
+what it does, the ports it needs opened, whether it runs as root, any extra files it downloads beside
+its program (by name and size), and roughly how much memory and storage it uses. Every install shows this warning first, and you have to tick the box under it to go
 on:
 
 > **Add-ons run on this device with access to its microphones, speaker, network and your Home Assistant
@@ -58,8 +58,9 @@ Checked in review:
 - **An `addon.json` in each release**, as a release asset beside the binaries (format below).
 - **No further executable code downloaded at run time.** The device runs only the files the catalog
   pins by their hashes; an add-on that fetches and runs a plugin, a script or another binary would run
-  code nobody looked over. This is a current limit of the catalog: an add-on that needs more files, or
-  another role than a program that runs on the device, should say so in the issue.
+  code nobody looked over. An add-on that needs more than its program (another project's release it
+  unpacks, a model) brings it as [extra files](#extra-files), pinned like the binary, and says so in
+  the issue; one that needs another role than a program that runs on the device should say so too.
 - **No secrets and no telemetry without the owner's say.** Nothing is sent anywhere the owner did not
   set up or agree to, and no keys or accounts are built into the binary.
 - **Ports at 1024 or above**, each with a reason, unless it runs as root.
@@ -72,14 +73,18 @@ Checked by `mkcatalog` and by every device (the definitions are in TECHO5's
 - The id is lowercase letters, digits and dashes, starting with a letter, 2 to 40 characters.
 - The version is `X.Y.Z` (optionally with a leading `v`, a `-prerelease` and a `_build` part), and
   `addon.json`'s `id` and `version` are exactly its entry's.
-- Every download (each binary, and `addon.json`) is an https link pinned by its SHA-256 and size; a
-  download that doesn't match is refused.
+- Every download (each binary, each extra file, and `addon.json`) is an https link pinned by its
+  SHA-256 and size; a download that doesn't match is refused.
 - Each port is `tcp` or `udp`, a single `port` or a `from`/`to` range (not both), with a `why`. None
   may be one of TECHO5's own (tcp 22, 4070, 5000, 6053, 7000, 8181, 8554, 8928; udp 68, 319-320, 546,
   1900, 3702, 5353, 6001-6010), none may be given twice, and none may be below 1024 unless it runs as
   root.
-- `addon.json` asks for exactly the ports and root its catalog entry lists: a device refuses one that
-  asks for more, even when its hash matches.
+- `addon.json` asks for exactly the ports and root its catalog entry lists, and names exactly the extra
+  files the entry pins for the device's build: a device refuses one that differs, even when its hash
+  matches.
+- Extra files have plain names (letters, digits, `.`, `-`, `_` and `+`, at most 64, not starting with a
+  dot, not the program's name), each given once, at most 8 for a build and 128 MB together, and every
+  build lists the same names.
 - `memory_mb` is more than zero. A device doesn't install or start an add-on that would leave less than
   100 MB of memory for TECHO5.
 - JSON is read strictly: keys are lowercase, each key appears once, and a key the format doesn't know
@@ -117,6 +122,7 @@ techo5-plex's, for example:
 - `page` (optional): its own web page, which the card links to. `{device}` is the device's address as
   the browser reached it.
 - `memory_mb`: roughly how much memory it uses.
+- `files` (optional): the names of its [extra files](#extra-files), which its catalog entry pins.
 
 Check a manifest the way a device does, from a TECHO5 checkout's `echod` folder:
 
@@ -124,13 +130,44 @@ Check a manifest the way a device does, from a TECHO5 checkout's `echod` folder:
 go run ./cmd/mkcatalog -manifest addon.json
 ```
 
+### Extra files
+
+A program that needs files beside it (another project's release it unpacks, a model) names them in
+`addon.json`, `"files": ["netbird.tar.gz"]`, and its catalog entry pins each one as it pins the binary.
+The device downloads and checks each one as it does the program, and refuses the whole install or
+update if one doesn't match. They are installed read-only (root's, `0644`) in the add-on's `bin`
+folder beside the program, under those names; the program finds that folder in `TECHO5_ADDON_BIN`
+(and its `state` folder in `TECHO5_ADDON_STATE`). An update replaces them with the program, going back
+to the version before puts the old ones back, and removing the add-on deletes them. An update that
+adds a file or changes one asks the owner again, as one asking for a new port does.
+
+They are keyed by the TECHO5 build that gets them, `arm` or `arm64` as the binaries are, whatever is
+inside them: NetBird's add-on pins its own `arm` build and, under `arm`, NetBird's `linux_arm64`
+archive, since every device it runs on has a 64-bit kernel. One `addon.json` serves every build, so
+each build lists the same names. In the entry:
+
+```json
+"binaries": {
+  "arm": {"url": "https://github.com/example/techo5-netbird/releases/download/v0.2.0/techo5-netbird-arm", "sha256": "…", "size": 9000000}
+},
+"files": {
+  "arm": [
+    {"name": "netbird.tar.gz", "url": "https://github.com/netbirdio/netbird/releases/download/vX.Y.Z/netbird_X.Y.Z_linux_arm64.tar.gz", "sha256": "…", "size": 15000000}
+  ]
+}
+```
+
+An add-on that unpacks one is welcome to check its SHA-256 again against its own pin before it does;
+it never downloads it itself when it runs from the catalog.
+
 ### What the catalog entry adds
 
 The maintainer writes the entry from the release; you don't need to. Besides what `addon.json` says,
 it gives the oldest TECHO5 version for each family it runs on (`min_techo5`: `show`, `spot`, `dot`),
 optionally the boards it is limited to, and roughly how much storage it uses (`disk_mb`; what it keeps
 in its `state` folder is held to four times that, at least 64 MB). The pins are measured from the
-downloaded files with `mkcatalog -pin URL=FILE`, never typed by hand. A version whose release has no
+downloaded files with `mkcatalog -pin URL=FILE` (with `-file NAME` for an extra file, which prints it
+under its name), never typed by hand. A version whose release has no
 `addon.json` can be listed, but devices show it without offering to install it.
 
 ### How a submission is reviewed
@@ -165,8 +202,11 @@ add-on itself to its own repository.
 ## For the maintainer
 
 Each push and pull request runs [check.yml](.github/workflows/check.yml): it builds `mkcatalog` from
-TECHO5's `main`, checks `catalog.json` the way a device reads it, downloads every pinned file and checks
-its SHA-256 and size, and checks each pinned `addon.json` against its entry.
+TECHO5's `main`, checks `catalog.json` the way a device reads it, downloads every pinned file (binaries,
+extra files and manifests) and checks its SHA-256 and size, and checks each pinned `addon.json`
+against its entry, its extra files' names among it. A catalog that uses a field TECHO5's `main` doesn't
+read yet fails there, as it would on a device; and a device on a TECHO5 too old to know a field refuses
+the whole catalog, so an entry using extra files waits until a release that reads them has gone out.
 
 To publish, run TECHO5's `tools/sign-catalog.ps1` on the computer that holds the release key, with this
 repository checked out beside TECHO5's (or named by `-Catalog` or `$env:TECHO5_ADDONS`). It signs only
