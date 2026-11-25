@@ -5,10 +5,11 @@ This repository is the source of [TECHO5](https://github.com/HuskerMinion/techo5
 device's setup page.
 
 A device installs only what this catalog lists, and believes the catalog only with its signature. The
-maintainer signs it with TECHO5's release key and publishes `catalog.json` and `catalog.json.sig` on
-TECHO5's [`addons` release](https://github.com/HuskerMinion/techo5/releases/tag/addons), which is
-where devices fetch it. A change here reaches devices only once it is signed and published; nothing in
-this repository is fetched by a device directly.
+maintainer signs it with TECHO5's release key and publishes it on TECHO5's
+[`addons` release](https://github.com/HuskerMinion/techo5/releases/tag/addons), which is where devices
+fetch it, as two files written from this one (see [Two published files](#two-published-files)). A
+change here reaches devices only once it is signed and published; nothing in this repository is
+fetched by a device directly.
 
 The catalog is data, not code. The license in [LICENSE](LICENSE) (MIT, as TECHO5's) covers it and the
 files here; each add-on has its own license, in its own repository.
@@ -89,6 +90,8 @@ Checked by `mkcatalog` and by every device (the definitions are in TECHO5's
   100 MB of memory for TECHO5.
 - JSON is read strictly: keys are lowercase, each key appears once, and a key the format doesn't know
   is refused. `addon.json` is at most 16 KB.
+- A version that uses a feature beyond format 1 names it in `requires` (see
+  [Format 2 and `requires`](#format-2-and-requires)): one with extra files has `"requires": ["files"]`.
 
 ### `addon.json`
 
@@ -147,6 +150,7 @@ archive, since every device it runs on has a 64-bit kernel. One `addon.json` ser
 each build lists the same names. In the entry:
 
 ```json
+"requires": ["files"],
 "binaries": {
   "arm": {"url": "https://github.com/example/techo5-netbird/releases/download/v0.2.0/techo5-netbird-arm", "sha256": "…", "size": 9000000}
 },
@@ -159,6 +163,49 @@ each build lists the same names. In the entry:
 
 An add-on that unpacks one is welcome to check its SHA-256 again against its own pin before it does;
 it never downloads it itself when it runs from the catalog.
+
+### Format 2 and `requires`
+
+`catalog.json` here is format 2 (`"format": 2`). A version can carry `requires`, the features it needs
+that a device has to know to install it:
+
+```json
+{
+  "version": "0.2.0",
+  "requires": ["files"],
+  "min_techo5": {"show": "v1.6.52"},
+  "binaries": {"arm": {"url": "…", "sha256": "…", "size": 9000000}},
+  "files": {"arm": [{"name": "netbird.tar.gz", "url": "…", "sha256": "…", "size": 15000000}]},
+  "ports": [],
+  "root": true,
+  "memory_mb": 40,
+  "disk_mb": 30
+}
+```
+
+The only feature today is `files`, the [extra files](#extra-files). A version that uses one names it,
+and a version names only what it uses; `mkcatalog` refuses either way round.
+
+This is how the catalog grows without breaking devices. A device skips a version that requires a
+feature it doesn't know, rather than refusing the whole catalog over a field it can't read; an add-on
+with no version it can read is shown grayed out, as needing a newer TECHO5. Nothing else is loosened:
+a key the format doesn't know is still refused everywhere else, and a device that knows a feature reads
+its fields as strictly as the rest. So a new field comes with a new feature name, and every version that
+uses it requires it.
+
+### Two published files
+
+Devices up to TECHO5 v1.6.53 read only format 1, strictly: one field they don't know (such as
+`files`) and they refuse the whole catalog, listing nothing. So `mkcatalog` writes two files from this
+one, each signed under its own domain so neither's signature verifies as the other:
+
+- `catalog-v2.json`: everything, in format 2. Newer devices fetch it first.
+- `catalog.json`: format 1, exactly as older devices read it, with every version that requires
+  anything left out, and an add-on with no version left left out too. Older devices go on listing what
+  they can install; newer devices fall back to it only while `catalog-v2.json` isn't published.
+
+Both carry the same serial and expiry. A version once in `catalog.json` can't come to require
+something later: that would take it away from the devices that installed it.
 
 ### What the catalog entry adds
 
@@ -202,13 +249,15 @@ add-on itself to its own repository.
 ## For the maintainer
 
 Each push and pull request runs [check.yml](.github/workflows/check.yml): it builds `mkcatalog` from
-TECHO5's `main`, checks `catalog.json` the way a device reads it, downloads every pinned file (binaries,
-extra files and manifests) and checks its SHA-256 and size, and checks each pinned `addon.json`
-against its entry, its extra files' names among it. A catalog that uses a field TECHO5's `main` doesn't
-read yet fails there, as it would on a device; and a device on a TECHO5 too old to know a field refuses
-the whole catalog, so an entry using extra files waits until a release that reads them has gone out.
+TECHO5's `main`, checks `catalog.json` the way a device reads it, in both formats it is published as,
+downloads every pinned file (binaries, extra files and manifests) and checks its SHA-256 and size, and
+checks each pinned `addon.json` against its entry, its extra files' names among it. A catalog that uses
+a field or requires a feature TECHO5's `main` doesn't know yet fails there; `tools/check-pins.py`
+likewise fails on a feature whose downloads it hasn't been taught to check. A device too old to know a
+feature skips the versions that require it, and a format 1 device never sees them.
 
-To publish, run TECHO5's `tools/sign-catalog.ps1` on the computer that holds the release key, with this
+To publish, run TECHO5's `tools/sign-catalog.ps1`, which publishes all four files (`catalog-v2.json`,
+`catalog.json` and their `.sig` files), on the computer that holds the release key, with this
 repository checked out beside TECHO5's (or named by `-Catalog` or `$env:TECHO5_ADDONS`). It signs only
 a catalog that is committed and at `origin/main` here, with `mkcatalog` built from a clean TECHO5 at
 its `origin/main`; raise `serial` with every change. `tools/release.ps1` runs it with every release.

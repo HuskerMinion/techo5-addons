@@ -1,6 +1,8 @@
 # Every push and pull request: the catalog is one a device would take, every file it pins is still
 # what it pins, and every pinned addon.json matches its entry. mkcatalog is built from TECHO5's main,
 # so the catalog is read here with the same definition a device and the signing tool read it with.
+# The catalog is format 2: mkcatalog checks it whole, as catalog-v2.json is written from it, and checks
+# the format 1 catalog.json written from it too, as a device that reads only format 1 reads it.
 name: check
 
 on:
@@ -34,7 +36,7 @@ jobs:
         working-directory: techo5/echod
         run: go build -o "$RUNNER_TEMP/mkcatalog" ./cmd/mkcatalog
 
-      - name: Check the catalog
+      - name: Check the catalog, in both formats it is published as
         run: '"$RUNNER_TEMP/mkcatalog" -in catalog.json'
 
       - name: Check every pinned file and manifest

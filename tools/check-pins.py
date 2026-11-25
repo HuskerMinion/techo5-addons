@@ -12,6 +12,10 @@ otherwise pass as having no entry yet.
 A version that pins no manifest is checked for its binaries only. Withdrawn versions and add-ons are
 skipped: their files may be gone, and nothing of them is installed.
 
+The catalog is format 2. A version's "requires" names the features it uses beyond format 1; this
+script knows how to check the downloads of those in KNOWN, and fails on a version requiring anything
+else, so a new feature's downloads are never left unchecked because this script was not taught them.
+
 Usage: check-pins.py CATALOG MKCATALOG WORKDIR
 """
 
@@ -21,6 +25,10 @@ import os
 import subprocess
 import sys
 import urllib.request
+
+# The catalog format this script reads, and the features a version may require whose pins it checks.
+FORMAT = 2
+KNOWN = {"files"}
 
 
 def fetch(url, size, path):
@@ -63,6 +71,8 @@ def main():
         c = json.load(f)
     os.makedirs(work, exist_ok=True)
     problems = []
+    if c.get("format") != FORMAT:
+        sys.exit(f"{catalog} is format {c.get('format')}, and this script reads format {FORMAT}")
     for a in c.get("addons", []):
         if a.get("withdrawn"):
             print(f"skip {a['id']}: withdrawn")
@@ -71,6 +81,10 @@ def main():
             what = f"{a['id']} {v['version']}"
             if v.get("withdrawn"):
                 print(f"skip {what}: withdrawn")
+                continue
+            unknown = sorted(set(v.get("requires") or []) - KNOWN)
+            if unknown:
+                problems.append(f"{what}: requires {', '.join(unknown)}, whose pins this script does not know how to check")
                 continue
             for arch, pin in sorted(v.get("binaries", {}).items()):
                 path = os.path.join(work, f"{a['id']}-{v['version']}-{arch}")
