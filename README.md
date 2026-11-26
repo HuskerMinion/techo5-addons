@@ -67,6 +67,8 @@ Checked in review:
 - **Ports at 1024 or above**, each with a reason, unless it runs as root.
 - **Root only with a clear reason**, such as making a network interface for a VPN. The card shows it in
   bold.
+- **Light on the flash**, as [Storage wear](#storage-wear) says, with what it writes, and how often, in
+  the issue.
 
 Checked by `mkcatalog` and by every device (the definitions are in TECHO5's
 [`echod/internal/feature/addons/catalog`](https://github.com/HuskerMinion/techo5/tree/main/echod/internal/feature/addons/catalog)):
@@ -93,6 +95,25 @@ Checked by `mkcatalog` and by every device (the definitions are in TECHO5's
   is refused. `addon.json` is at most 16 KB.
 - A version that uses a feature beyond format 1 names it in `requires` (see
   [Format 2 and `requires`](#format-2-and-requires)): one with extra files has `"requires": ["files"]`.
+
+### Storage wear
+
+The device's storage is flash, and every write wears it. TECHO5 itself writes about 35 MB a
+day to it. An add-on's `state` folder (`TECHO5_ADDON_STATE`) is on that flash: its size is capped, but
+how often it is written isn't. TECHO5 measures what each add-on writes and warns the owner above 50 MB
+a day; aim well under 10 MB.
+
+- **Caches and scratch files go in `/tmp` or memory**, not the `state` folder. `/tmp` is RAM, 32 MB
+  shared with everything else on the device, so keep what goes there small and clean it up.
+- **Write state when it changes**, not on a timer, and not again when it is the same.
+- **No `fsync` in a loop.** Sync once when something that matters has been saved, if at all.
+- **Log to stdout and stderr**, not to files of its own. TECHO5 keeps that log, capped at 256 KB with
+  one rotation; don't log every request or poll in normal use.
+- **Retry downloads with backoff**, so a failing one isn't fetched and written again and again.
+- **A database writes little and seldom**: batch its writes, and don't keep a write-ahead log or
+  journal syncing all the time.
+
+The issue asks what it writes and how often, in MB a day in normal use, and review checks it.
 
 ### `addon.json`
 
@@ -225,6 +246,9 @@ The maintainer, before listing a version:
 - reads the code for what it does on the device: what it runs, what it reads, and what it changes;
 - checks what it reaches over the network, and what it sends there;
 - checks what it stores, where, and how much;
+- checks what it writes to storage and how often: caches and scratch files in `/tmp` or memory, state
+  written only when it changes, no `fsync` in loops, logs to stdout, downloads retried with backoff,
+  and well under 10 MB a day;
 - checks how it updates: only by a new release listed here, never by fetching code itself;
 - checks the license;
 - builds or downloads the release, checks it against its `SHA256SUMS` (and attestation, if any), and

@@ -99,6 +99,18 @@ body:
       description: What it keeps in its state folder (settings, accounts, caches), and roughly how much.
     validations:
       required: true
+  - type: textarea
+    id: writes
+    attributes:
+      label: What does it write to storage, and how often?
+      description: |
+        Everything it writes to the device's flash in normal use: state saves, databases, caches, logs, downloads. Say when each is written (on a change, on a timer, every request) and estimate the MB per day. Caches and scratch files belong in `/tmp` (RAM) or memory, and logs on stdout; see [Storage wear](https://github.com/HuskerMinion/techo5-addons#storage-wear).
+      placeholder: |
+        settings.json, a few KB, only when the owner changes a setting
+        no cache on flash (artwork is kept in memory); logs go to stdout
+        about 0.1 MB a day in normal use
+    validations:
+      required: true
   - type: input
     id: license
     attributes:
