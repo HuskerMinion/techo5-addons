@@ -100,8 +100,8 @@ Checked by `mkcatalog` and by every device (the definitions are in TECHO5's
 
 The device's storage is flash, and every write wears it. TECHO5 itself writes about 35 MB a
 day to it. An add-on's `state` folder (`TECHO5_ADDON_STATE`) is on that flash: its size is capped, but
-how often it is written isn't. TECHO5 measures what each add-on writes and warns the owner above 50 MB
-a day; aim well under 10 MB.
+how often it is written isn't. A coming TECHO5 release measures what each add-on writes, shows it on
+the Add-ons card and warns the owner above 50 MB a day; aim well under 10 MB.
 
 - **Caches and scratch files go in `/tmp` or memory**, not the `state` folder. `/tmp` is RAM, 32 MB
   shared with everything else on the device, so keep what goes there small and clean it up.
