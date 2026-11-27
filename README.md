@@ -205,8 +205,11 @@ that a device has to know to install it:
 }
 ```
 
-The only feature today is `files`, the [extra files](#extra-files). A version that uses one names it,
-and a version names only what it uses; `mkcatalog` refuses either way round.
+The features today are `files`, the [extra files](#extra-files); `api1`, an add-on that talks to the
+device through TECHO5's add-on API (commands, speech, timers, entities and media); and `screen1`, an
+add-on that also draws a page under the Add-ons tab and a card over the clock (stage 2 of the add-on
+API, TECHO5's docs/addon-api.md). A version that uses one names it, and a version names only what it
+uses; `mkcatalog` refuses either way round.
 
 This is how the catalog grows without breaking devices. A device skips a version that requires a
 feature it doesn't know, rather than refusing the whole catalog over a field it can't read; an add-on
@@ -234,7 +237,11 @@ something later: that would take it away from the devices that installed it.
 The maintainer writes the entry from the release; you don't need to. Besides what `addon.json` says,
 it gives the oldest TECHO5 version for each family it runs on (`min_techo5`: `show`, `spot`, `dot`),
 optionally the boards it is limited to, and roughly how much storage it uses (`disk_mb`; what it keeps
-in its `state` folder is held to four times that, at least 64 MB). The pins are measured from the
+in its `state` folder is held to four times that, at least 64 MB). A version that draws on the screen
+(`screen1`) can also carry an `icon`, a Material Design Icons name such as `"mdi:chef-hat"`, chosen by
+the maintainer when listing it, never by the add-on: the device shows it on the Add-ons tab, the page's
+name bar and the card, and the add-on's initials when there is none. A new icon comes with a new
+version, since a published version doesn't change. The pins are measured from the
 downloaded files with `mkcatalog -pin URL=FILE` (with `-file NAME` for an extra file, which prints it
 under its name), never typed by hand. A version whose release has no
 `addon.json` can be listed, but devices show it without offering to install it.

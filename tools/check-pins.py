@@ -28,7 +28,7 @@ import urllib.request
 
 # The catalog format this script reads, and the features a version may require whose pins it checks.
 FORMAT = 2
-KNOWN = {"files"}
+KNOWN = {"files", "api1", "screen1"}
 
 
 def fetch(url, size, path):
