@@ -27,8 +27,10 @@ import sys
 import urllib.request
 
 # The catalog format this script reads, and the features a version may require whose pins it checks.
+# api1 (the add-on API) adds no downloads of its own: its binaries and manifest are checked as any
+# version's, and mkcatalog -manifest checks the API fields the entry repeats against the manifest.
 FORMAT = 2
-KNOWN = {"files"}
+KNOWN = {"files", "api1"}
 
 
 def fetch(url, size, path):
